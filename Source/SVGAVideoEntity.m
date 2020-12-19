@@ -26,12 +26,65 @@
 @property (nonatomic, copy) NSArray<SVGAAudioEntity *> *audios;
 @property (nonatomic, copy) NSString *cacheDir;
 
+//add by yqq
+@property (nonatomic, strong) NSMutableArray<NSString *> * ltImageKeys;
+
 @end
 
 @implementation SVGAVideoEntity
 
 static NSCache *videoCache;
 static NSMapTable * weakCache;
+
+//add by yqq
+- (NSInteger)onGetCustomImagesCount{
+    return _ltImageKeys.count;
+}
+
+//add by yqq
+- (void)replaceEntityImage:(NSArray<UIImage *> *)customImages{
+    if(customImages.count <= 0)
+        return;
+    //拷贝数据
+    NSMutableDictionary<NSString *, UIImage *> * mutableImages = [[NSMutableDictionary alloc] initWithCapacity:self.images.count];
+//    for (NSDictionary<NSString *, UIImage *> * dic in self.images) {
+//        [mutableImages setDictionary:dic];
+//    }
+    [self.images enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull key, UIImage * _Nonnull obj, BOOL * _Nonnull stop) {
+        [mutableImages setValue:obj forKey:key];
+    }];
+//    NSMutableDictionary<NSString *, UIImage *> * mutableImages = self.images;
+    //修改自定义数据
+    for (int i = 0; i < self.ltImageKeys.count; i++) {
+        NSString * imageKey = self.ltImageKeys[i];
+        int j = i % customImages.count;
+        UIImage * image = customImages[j];
+        if([mutableImages valueForKey:imageKey]){
+            [mutableImages removeObjectForKey:imageKey];
+            [mutableImages setObject:image forKey:imageKey];
+        }
+    }
+    self.images = mutableImages;
+}
+
+//add by yqq
+- (BOOL)writeAudioDataToFile:(NSString *)audioFilePath{
+    if (!audioFilePath) {
+        return NO;
+    }
+    if (self.audiosData.count > 0) {
+        NSString * audioKey = [[self.audiosData allKeys] firstObject];
+        NSData * mp3Data = [self.audiosData objectForKey:audioKey];
+        NSLog(@"mp3Data size = %lu",(unsigned long)mp3Data.length);
+        return [mp3Data writeToFile:audioFilePath atomically:NO];
+    }
+    return NO;
+}
+
+//add by yqq
+- (void)disableAudio{
+    self.audiosData = nil;
+}
 
 + (void)load {
     static dispatch_once_t onceToken;
@@ -147,6 +200,9 @@ static NSMapTable * weakCache;
 }
 
 - (void)resetImagesWithProtoObject:(SVGAProtoMovieEntity *)protoObject {
+    //add by yqq
+    self.ltImageKeys = [[NSMutableArray<NSString *> alloc] initWithCapacity:5];
+    
     NSMutableDictionary<NSString *, UIImage *> *images = [[NSMutableDictionary alloc] init];
     NSMutableDictionary<NSString *, NSData *> *audiosData = [[NSMutableDictionary alloc] init];
     NSDictionary *protoImages = [protoObject.images copy];
@@ -176,6 +232,11 @@ static NSMapTable * weakCache;
                 UIImage *image = [[UIImage alloc] initWithData:protoImages[key] scale:2.0];
                 if (image != nil) {
                     [images setObject:image forKey:key];
+                    
+                    //add by yqq
+                    if ([key containsString:@"ltdemo"]) {
+                        [self.ltImageKeys addObject:key];
+                    }
                 }
             }
         }

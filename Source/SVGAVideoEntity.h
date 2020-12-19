@@ -36,6 +36,16 @@
 - (void)saveCache:(NSString *)cacheKey;
 // NSMapTable弱缓存
 - (void)saveWeakCache:(NSString *)cacheKey;
+
+//add by yqq
+- (NSInteger)onGetCustomImagesCount;
+
+- (void)replaceEntityImage:(NSArray<UIImage *> *)customImages;
+
+- (BOOL)writeAudioDataToFile:(NSString *)audioFilePath;
+
+- (void)disableAudio;
+
 @end
 
 
