@@ -38,6 +38,12 @@
 - (void)saveWeakCache:(NSString *)cacheKey;
 
 //add by yqq
+- (NSDictionary<NSString *, UIImage *> *)getImagesDictionary;
+- (void)replaceEntityImage2:(NSDictionary<NSString *, UIImage *> *)customImages;
+
+//add by yqq
+- (NSArray<NSString *> *)getImagesKeysArray;
+
 - (NSInteger)onGetCustomImagesCount;
 
 - (void)replaceEntityImage:(NSArray<UIImage *> *)customImages;

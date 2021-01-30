@@ -37,6 +37,20 @@ static NSCache *videoCache;
 static NSMapTable * weakCache;
 
 //add by yqq
+- (NSDictionary<NSString *, UIImage *> *)getImagesDictionary{
+    return self.images;
+}
+
+- (void)replaceEntityImage2:(NSDictionary<NSString *, UIImage *> *)customImages{
+    self.images = customImages;
+}
+
+//add by yqq
+- (NSArray<NSString *> *)getImagesKeysArray{
+    return self.ltImageKeys;
+}
+
+//add by yqq
 - (NSInteger)onGetCustomImagesCount{
     return _ltImageKeys.count;
 }
@@ -57,13 +71,16 @@ static NSMapTable * weakCache;
     //修改自定义数据
     for (int i = 0; i < self.ltImageKeys.count; i++) {
         NSString * imageKey = self.ltImageKeys[i];
-        int j = i % customImages.count;
+        //获取bmpIndex ltdemo1
+        int bmpIndex = [imageKey substringFromIndex:6].intValue;
+        int j = (bmpIndex - 1) % customImages.count;
         UIImage * image = customImages[j];
         if([mutableImages valueForKey:imageKey]){
             [mutableImages removeObjectForKey:imageKey];
             [mutableImages setObject:image forKey:imageKey];
         }
     }
+    
     self.images = mutableImages;
 }
 
@@ -231,10 +248,13 @@ static NSMapTable * weakCache;
             } else {
                 UIImage *image = [[UIImage alloc] initWithData:protoImages[key] scale:2.0];
                 if (image != nil) {
+                    // add by hyq Fix内存暴涨
+                    image = [self imageByResizeToSize:image.size image:image];
                     [images setObject:image forKey:key];
                     
                     //add by yqq
                     if ([key containsString:@"ltdemo"]) {
+//                        NSLog(@"resetImagesWithProtoObject key = %@",key);
                         [self.ltImageKeys addObject:key];
                     }
                 }
@@ -243,6 +263,15 @@ static NSMapTable * weakCache;
     }
     self.images = images;
     self.audiosData = audiosData;
+}
+
+- (UIImage *)imageByResizeToSize:(CGSize)size image:(UIImage *)image {
+    if (size.width <= 0 || size.height <= 0) return nil;
+    UIGraphicsBeginImageContextWithOptions(size, NO, image.scale);
+    [image drawInRect:CGRectMake(0, 0, size.width, size.height)];
+    UIImage *result = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    return result;
 }
 
 - (void)resetSpritesWithProtoObject:(SVGAProtoMovieEntity *)protoObject {
